@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สถานประกอบการ | Internship Tracking</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+    <div class="brand">Internship Tracking</div>
+    <div class="user-area">
+        <a href="applications.html" class="nav-link">การสมัครฝึกงาน</a>
+        <a href="index.html" class="nav-link">หน้าหลัก</a>
+        <span id="userName" class="user-name"></span>
+        <form method="POST" action="/logout">
+            <button type="submit" class="logout-btn">ออกจากระบบ</button>
+        </form>
+    </div>
+</header>
+
+<main class="container">
+    <h1>สถานประกอบการ</h1>
+
+    <section class="panel" id="addCompanyPanel">
+        <h2>เพิ่มสถานประกอบการ</h2>
+        <form id="companyForm" class="student-form">
+            <input type="text" id="nameInput" placeholder="ชื่อสถานประกอบการ" required>
+            <input type="text" id="addressInput" placeholder="ที่อยู่">
+            <input type="text" id="contactNameInput" placeholder="ผู้ประสานงาน">
+            <input type="text" id="contactPhoneInput" placeholder="เบอร์โทร">
+            <button type="submit">เพิ่ม</button>
+        </form>
+        <p id="formMessage" class="form-message"></p>
+    </section>
+
+    <section class="panel">
+        <h2>รายชื่อสถานประกอบการ</h2>
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th>ชื่อสถานประกอบการ</th>
+                <th>ที่อยู่</th>
+                <th>ผู้ประสานงาน</th>
+                <th>เบอร์โทร</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody id="companyTableBody">
+            <tr><td colspan="5">กำลังโหลด...</td></tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+
+<script src="companies.js"></script>
+</body>
+</html>
+

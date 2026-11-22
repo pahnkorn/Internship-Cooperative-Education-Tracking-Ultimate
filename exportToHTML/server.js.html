@@ -1,0 +1,192 @@
+<html>
+<head>
+<title>server.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#191a1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+server.js</font>
+</center></td></tr></table>
+<pre><span class="s0">const </span><span class="s1">express </span><span class="s2">= </span><span class="s1">require</span><span class="s2">(</span><span class="s3">&quot;express&quot;</span><span class="s2">);</span>
+<span class="s0">const </span><span class="s1">session </span><span class="s2">= </span><span class="s1">require</span><span class="s2">(</span><span class="s3">&quot;express-session&quot;</span><span class="s2">);</span>
+<span class="s0">const </span><span class="s1">bcrypt </span><span class="s2">= </span><span class="s1">require</span><span class="s2">(</span><span class="s3">&quot;bcryptjs&quot;</span><span class="s2">);</span>
+<span class="s0">const </span><span class="s1">path </span><span class="s2">= </span><span class="s1">require</span><span class="s2">(</span><span class="s3">&quot;path&quot;</span><span class="s2">);</span>
+<span class="s0">const </span><span class="s1">mysql </span><span class="s2">= </span><span class="s1">require</span><span class="s2">(</span><span class="s3">&quot;mysql2/promise&quot;</span><span class="s2">);</span>
+
+<span class="s0">const </span><span class="s1">app </span><span class="s2">= </span><span class="s1">express</span><span class="s2">();</span>
+<span class="s0">const </span><span class="s1">PORT </span><span class="s2">= </span><span class="s4">1234</span><span class="s2">;</span>
+
+<span class="s0">const </span><span class="s1">pool </span><span class="s2">= </span><span class="s1">mysql</span><span class="s2">.</span><span class="s1">createPool</span><span class="s2">({</span>
+    <span class="s1">host</span><span class="s2">: </span><span class="s3">&quot;localhost&quot;</span><span class="s2">,</span>
+    <span class="s1">port</span><span class="s2">: </span><span class="s4">3306</span><span class="s2">,</span>
+    <span class="s1">user</span><span class="s2">: </span><span class="s3">&quot;internship_app&quot;</span><span class="s2">,</span>
+    <span class="s1">password</span><span class="s2">: </span><span class="s3">&quot;zxcv1234&quot;</span><span class="s2">,</span>
+    <span class="s1">database</span><span class="s2">: </span><span class="s3">&quot;internship_tracking&quot;</span>
+<span class="s2">});</span>
+
+<span class="s1">app</span><span class="s2">.</span><span class="s1">use</span><span class="s2">(</span><span class="s1">express</span><span class="s2">.</span><span class="s1">urlencoded</span><span class="s2">({ </span><span class="s1">extended</span><span class="s2">: </span><span class="s0">false </span><span class="s2">}));</span>
+<span class="s1">app</span><span class="s2">.</span><span class="s1">use</span><span class="s2">(</span><span class="s1">express</span><span class="s2">.</span><span class="s1">json</span><span class="s2">());</span>
+<span class="s1">app</span><span class="s2">.</span><span class="s1">use</span><span class="s2">(</span>
+    <span class="s1">session</span><span class="s2">({</span>
+        <span class="s1">secret</span><span class="s2">: </span><span class="s3">&quot;internship-tracking-dev-secret&quot;</span><span class="s2">,</span>
+        <span class="s1">resave</span><span class="s2">: </span><span class="s0">false</span><span class="s2">,</span>
+        <span class="s1">saveUninitialized</span><span class="s2">: </span><span class="s0">false</span>
+    <span class="s2">})</span>
+<span class="s2">);</span>
+
+<span class="s1">app</span><span class="s2">.</span><span class="s1">post</span><span class="s2">(</span><span class="s3">&quot;/login&quot;</span><span class="s2">, </span><span class="s1">async </span><span class="s2">(</span><span class="s1">req</span><span class="s2">, </span><span class="s1">res</span><span class="s2">) =&gt; {</span>
+    <span class="s0">const </span><span class="s2">{ </span><span class="s1">username</span><span class="s2">, </span><span class="s1">password </span><span class="s2">} = </span><span class="s1">req</span><span class="s2">.</span><span class="s1">body</span><span class="s2">;</span>
+
+    <span class="s0">try </span><span class="s2">{</span>
+        <span class="s0">const </span><span class="s2">[</span><span class="s1">rows</span><span class="s2">] = </span><span class="s0">await </span><span class="s1">pool</span><span class="s2">.</span><span class="s1">query</span><span class="s2">(</span>
+            <span class="s3">&quot;SELECT * FROM users WHERE username = ?&quot;</span><span class="s2">,</span>
+            <span class="s2">[</span><span class="s1">username</span><span class="s2">]</span>
+        <span class="s2">);</span>
+        <span class="s0">const </span><span class="s1">user </span><span class="s2">= </span><span class="s1">rows</span><span class="s2">[</span><span class="s4">0</span><span class="s2">];</span>
+
+        <span class="s0">if </span><span class="s2">(!</span><span class="s1">user </span><span class="s2">|| !(</span><span class="s0">await </span><span class="s1">bcrypt</span><span class="s2">.</span><span class="s1">compare</span><span class="s2">(</span><span class="s1">password</span><span class="s2">, </span><span class="s1">user</span><span class="s2">.</span><span class="s1">password_hash</span><span class="s2">))) {</span>
+            <span class="s0">return </span><span class="s1">res</span><span class="s2">.</span><span class="s1">redirect</span><span class="s2">(</span><span class="s3">&quot;/login.html?error=1&quot;</span><span class="s2">);</span>
+        <span class="s2">}</span>
+
+        <span class="s1">req</span><span class="s2">.</span><span class="s1">session</span><span class="s2">.</span><span class="s1">user </span><span class="s2">= { </span><span class="s1">id</span><span class="s2">: </span><span class="s1">user</span><span class="s2">.</span><span class="s1">id</span><span class="s2">, </span><span class="s1">username</span><span class="s2">: </span><span class="s1">user</span><span class="s2">.</span><span class="s1">username</span><span class="s2">, </span><span class="s1">role</span><span class="s2">: </span><span class="s1">user</span><span class="s2">.</span><span class="s1">role </span><span class="s2">};</span>
+        <span class="s1">res</span><span class="s2">.</span><span class="s1">redirect</span><span class="s2">(</span><span class="s3">&quot;/&quot;</span><span class="s2">);</span>
+    <span class="s2">} </span><span class="s0">catch </span><span class="s2">(</span><span class="s1">error</span><span class="s2">) {</span>
+        <span class="s1">console</span><span class="s2">.</span><span class="s1">error</span><span class="s2">(</span><span class="s1">error</span><span class="s2">.</span><span class="s1">message</span><span class="s2">);</span>
+        <span class="s1">res</span><span class="s2">.</span><span class="s1">redirect</span><span class="s2">(</span><span class="s3">&quot;/login.html?error=1&quot;</span><span class="s2">);</span>
+    <span class="s2">}</span>
+<span class="s2">});</span>
+
+<span class="s1">app</span><span class="s2">.</span><span class="s1">post</span><span class="s2">(</span><span class="s3">&quot;/logout&quot;</span><span class="s2">, (</span><span class="s1">req</span><span class="s2">, </span><span class="s1">res</span><span class="s2">) =&gt; {</span>
+    <span class="s1">req</span><span class="s2">.</span><span class="s1">session</span><span class="s2">.</span><span class="s1">destroy</span><span class="s2">(() =&gt; {</span>
+        <span class="s1">res</span><span class="s2">.</span><span class="s1">redirect</span><span class="s2">(</span><span class="s3">&quot;/login.html&quot;</span><span class="s2">);</span>
+    <span class="s2">});</span>
+<span class="s2">});</span>
+
+<span class="s1">app</span><span class="s2">.</span><span class="s1">use</span><span class="s2">((</span><span class="s1">req</span><span class="s2">, </span><span class="s1">res</span><span class="s2">, </span><span class="s1">next</span><span class="s2">) =&gt; {</span>
+    <span class="s0">if </span><span class="s2">(</span><span class="s1">req</span><span class="s2">.</span><span class="s1">path </span><span class="s2">=== </span><span class="s3">&quot;/login.html&quot; </span><span class="s2">|| </span><span class="s1">req</span><span class="s2">.</span><span class="s1">session</span><span class="s2">.</span><span class="s1">user</span><span class="s2">) {</span>
+        <span class="s0">return </span><span class="s1">next</span><span class="s2">();</span>
+    <span class="s2">}</span>
+    <span class="s0">if </span><span class="s2">(</span><span class="s1">req</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">startsWith</span><span class="s2">(</span><span class="s3">&quot;/api/&quot;</span><span class="s2">)) {</span>
+        <span class="s0">return </span><span class="s1">res</span><span class="s2">.</span><span class="s1">status</span><span class="s2">(</span><span class="s4">401</span><span class="s2">).</span><span class="s1">json</span><span class="s2">({ </span><span class="s1">error</span><span class="s2">: </span><span class="s3">&quot;ยังไม่ได้ล็อกอิน&quot; </span><span class="s2">});</span>
+    <span class="s2">}</span>
+    <span class="s1">res</span><span class="s2">.</span><span class="s1">redirect</span><span class="s2">(</span><span class="s3">&quot;/login.html&quot;</span><span class="s2">);</span>
+<span class="s2">});</span>
+
+<span class="s1">app</span><span class="s2">.</span><span class="s1">use</span><span class="s2">(</span><span class="s1">express</span><span class="s2">.</span><span class="s1">static</span><span class="s2">(</span><span class="s1">path</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span><span class="s1">__dirname</span><span class="s2">, </span><span class="s3">&quot;public&quot;</span><span class="s2">)));</span>
+
+<span class="s1">app</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s3">&quot;/api/me&quot;</span><span class="s2">, (</span><span class="s1">req</span><span class="s2">, </span><span class="s1">res</span><span class="s2">) =&gt; {</span>
+    <span class="s1">res</span><span class="s2">.</span><span class="s1">json</span><span class="s2">(</span><span class="s1">req</span><span class="s2">.</span><span class="s1">session</span><span class="s2">.</span><span class="s1">user</span><span class="s2">);</span>
+<span class="s2">});</span>
+
+<span class="s1">app</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s3">&quot;/api/status&quot;</span><span class="s2">, </span><span class="s1">async </span><span class="s2">(</span><span class="s1">req</span><span class="s2">, </span><span class="s1">res</span><span class="s2">) =&gt; {</span>
+    <span class="s0">try </span><span class="s2">{</span>
+        <span class="s0">await </span><span class="s1">pool</span><span class="s2">.</span><span class="s1">query</span><span class="s2">(</span><span class="s3">&quot;SELECT 1&quot;</span><span class="s2">);</span>
+        <span class="s1">res</span><span class="s2">.</span><span class="s1">json</span><span class="s2">({ </span><span class="s1">database</span><span class="s2">: </span><span class="s3">&quot;connected&quot; </span><span class="s2">});</span>
+    <span class="s2">} </span><span class="s0">catch </span><span class="s2">(</span><span class="s1">error</span><span class="s2">) {</span>
+        <span class="s1">console</span><span class="s2">.</span><span class="s1">error</span><span class="s2">(</span><span class="s1">error</span><span class="s2">.</span><span class="s1">message</span><span class="s2">);</span>
+        <span class="s1">res</span><span class="s2">.</span><span class="s1">status</span><span class="s2">(</span><span class="s4">500</span><span class="s2">).</span><span class="s1">json</span><span class="s2">({ </span><span class="s1">database</span><span class="s2">: </span><span class="s3">&quot;error&quot; </span><span class="s2">});</span>
+    <span class="s2">}</span>
+<span class="s2">});</span>
+
+<span class="s1">app</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s3">&quot;/api/students/count&quot;</span><span class="s2">, </span><span class="s1">async </span><span class="s2">(</span><span class="s1">req</span><span class="s2">, </span><span class="s1">res</span><span class="s2">) =&gt; {</span>
+    <span class="s0">try </span><span class="s2">{</span>
+        <span class="s0">const </span><span class="s2">[</span><span class="s1">rows</span><span class="s2">] = </span><span class="s0">await </span><span class="s1">pool</span><span class="s2">.</span><span class="s1">query</span><span class="s2">(</span><span class="s3">&quot;SELECT COUNT(*) AS total FROM students&quot;</span><span class="s2">);</span>
+        <span class="s1">res</span><span class="s2">.</span><span class="s1">json</span><span class="s2">({ </span><span class="s1">total</span><span class="s2">: </span><span class="s1">rows</span><span class="s2">[</span><span class="s4">0</span><span class="s2">].</span><span class="s1">total </span><span class="s2">});</span>
+    <span class="s2">} </span><span class="s0">catch </span><span class="s2">(</span><span class="s1">error</span><span class="s2">) {</span>
+        <span class="s1">console</span><span class="s2">.</span><span class="s1">error</span><span class="s2">(</span><span class="s1">error</span><span class="s2">.</span><span class="s1">message</span><span class="s2">);</span>
+        <span class="s1">res</span><span class="s2">.</span><span class="s1">status</span><span class="s2">(</span><span class="s4">500</span><span class="s2">).</span><span class="s1">json</span><span class="s2">({ </span><span class="s1">total</span><span class="s2">: </span><span class="s4">0 </span><span class="s2">});</span>
+    <span class="s2">}</span>
+<span class="s2">});</span>
+<span class="s1">app</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s3">&quot;/api/students&quot;</span><span class="s2">, </span><span class="s1">async </span><span class="s2">(</span><span class="s1">req</span><span class="s2">, </span><span class="s1">res</span><span class="s2">) =&gt; {</span>
+    <span class="s0">const </span><span class="s1">keyword </span><span class="s2">= (</span><span class="s1">req</span><span class="s2">.</span><span class="s1">query</span><span class="s2">.</span><span class="s1">q </span><span class="s2">|| </span><span class="s3">&quot;&quot;</span><span class="s2">).</span><span class="s1">trim</span><span class="s2">();</span>
+
+    <span class="s0">try </span><span class="s2">{</span>
+        <span class="s0">const </span><span class="s2">[</span><span class="s1">rows</span><span class="s2">] = </span><span class="s0">await </span><span class="s1">pool</span><span class="s2">.</span><span class="s1">query</span><span class="s2">(</span>
+            <span class="s3">&quot;SELECT id, student_code, full_name, major FROM students WHERE student_code LIKE ? OR full_name LIKE ? ORDER BY id&quot;</span><span class="s2">,</span>
+            <span class="s2">[</span><span class="s3">`%</span><span class="s1">$</span><span class="s2">{</span><span class="s1">keyword</span><span class="s2">}</span><span class="s3">%`</span><span class="s2">, </span><span class="s3">`%</span><span class="s1">$</span><span class="s2">{</span><span class="s1">keyword</span><span class="s2">}</span><span class="s3">%`</span><span class="s2">]</span>
+        <span class="s2">);</span>
+        <span class="s1">res</span><span class="s2">.</span><span class="s1">json</span><span class="s2">(</span><span class="s1">rows</span><span class="s2">);</span>
+    <span class="s2">} </span><span class="s0">catch </span><span class="s2">(</span><span class="s1">error</span><span class="s2">) {</span>
+        <span class="s1">console</span><span class="s2">.</span><span class="s1">error</span><span class="s2">(</span><span class="s1">error</span><span class="s2">.</span><span class="s1">message</span><span class="s2">);</span>
+        <span class="s1">res</span><span class="s2">.</span><span class="s1">status</span><span class="s2">(</span><span class="s4">500</span><span class="s2">).</span><span class="s1">json</span><span class="s2">({ </span><span class="s1">error</span><span class="s2">: </span><span class="s3">&quot;ดึงข้อมูลไม่สำเร็จ&quot; </span><span class="s2">});</span>
+    <span class="s2">}</span>
+<span class="s2">});</span>
+
+<span class="s1">app</span><span class="s2">.</span><span class="s1">post</span><span class="s2">(</span><span class="s3">&quot;/api/students&quot;</span><span class="s2">, </span><span class="s1">async </span><span class="s2">(</span><span class="s1">req</span><span class="s2">, </span><span class="s1">res</span><span class="s2">) =&gt; {</span>
+    <span class="s0">const </span><span class="s2">{ </span><span class="s1">student_code</span><span class="s2">, </span><span class="s1">full_name</span><span class="s2">, </span><span class="s1">major </span><span class="s2">} = </span><span class="s1">req</span><span class="s2">.</span><span class="s1">body</span><span class="s2">;</span>
+
+    <span class="s0">if </span><span class="s2">(!</span><span class="s1">student_code </span><span class="s2">|| !</span><span class="s1">full_name</span><span class="s2">) {</span>
+        <span class="s0">return </span><span class="s1">res</span><span class="s2">.</span><span class="s1">status</span><span class="s2">(</span><span class="s4">400</span><span class="s2">).</span><span class="s1">json</span><span class="s2">({ </span><span class="s1">error</span><span class="s2">: </span><span class="s3">&quot;กรุณากรอกรหัสนักศึกษาและชื่อ&quot; </span><span class="s2">});</span>
+    <span class="s2">}</span>
+
+    <span class="s0">try </span><span class="s2">{</span>
+        <span class="s0">await </span><span class="s1">pool</span><span class="s2">.</span><span class="s1">query</span><span class="s2">(</span>
+            <span class="s3">&quot;INSERT INTO students (student_code, full_name, major) VALUES (?, ?, ?)&quot;</span><span class="s2">,</span>
+            <span class="s2">[</span><span class="s1">student_code</span><span class="s2">.</span><span class="s1">trim</span><span class="s2">(), </span><span class="s1">full_name</span><span class="s2">.</span><span class="s1">trim</span><span class="s2">(), (</span><span class="s1">major </span><span class="s2">|| </span><span class="s3">&quot;&quot;</span><span class="s2">).</span><span class="s1">trim</span><span class="s2">()]</span>
+        <span class="s2">);</span>
+        <span class="s1">res</span><span class="s2">.</span><span class="s1">status</span><span class="s2">(</span><span class="s4">201</span><span class="s2">).</span><span class="s1">json</span><span class="s2">({ </span><span class="s1">message</span><span class="s2">: </span><span class="s3">&quot;เพิ่มนักศึกษาสำเร็จ&quot; </span><span class="s2">});</span>
+    <span class="s2">} </span><span class="s0">catch </span><span class="s2">(</span><span class="s1">error</span><span class="s2">) {</span>
+        <span class="s0">if </span><span class="s2">(</span><span class="s1">error</span><span class="s2">.</span><span class="s1">code </span><span class="s2">=== </span><span class="s3">&quot;ER_DUP_ENTRY&quot;</span><span class="s2">) {</span>
+            <span class="s0">return </span><span class="s1">res</span><span class="s2">.</span><span class="s1">status</span><span class="s2">(</span><span class="s4">409</span><span class="s2">).</span><span class="s1">json</span><span class="s2">({ </span><span class="s1">error</span><span class="s2">: </span><span class="s3">&quot;รหัสนักศึกษานี้มีอยู่แล้ว&quot; </span><span class="s2">});</span>
+        <span class="s2">}</span>
+        <span class="s1">console</span><span class="s2">.</span><span class="s1">error</span><span class="s2">(</span><span class="s1">error</span><span class="s2">.</span><span class="s1">message</span><span class="s2">);</span>
+        <span class="s1">res</span><span class="s2">.</span><span class="s1">status</span><span class="s2">(</span><span class="s4">500</span><span class="s2">).</span><span class="s1">json</span><span class="s2">({ </span><span class="s1">error</span><span class="s2">: </span><span class="s3">&quot;เพิ่มข้อมูลไม่สำเร็จ&quot; </span><span class="s2">});</span>
+    <span class="s2">}</span>
+<span class="s2">});</span>
+
+<span class="s1">app</span><span class="s2">.</span><span class="s1">put</span><span class="s2">(</span><span class="s3">&quot;/api/students/:id&quot;</span><span class="s2">, </span><span class="s1">async </span><span class="s2">(</span><span class="s1">req</span><span class="s2">, </span><span class="s1">res</span><span class="s2">) =&gt; {</span>
+    <span class="s0">const </span><span class="s2">{ </span><span class="s1">student_code</span><span class="s2">, </span><span class="s1">full_name</span><span class="s2">, </span><span class="s1">major </span><span class="s2">} = </span><span class="s1">req</span><span class="s2">.</span><span class="s1">body</span><span class="s2">;</span>
+
+    <span class="s0">if </span><span class="s2">(!</span><span class="s1">student_code </span><span class="s2">|| !</span><span class="s1">full_name</span><span class="s2">) {</span>
+        <span class="s0">return </span><span class="s1">res</span><span class="s2">.</span><span class="s1">status</span><span class="s2">(</span><span class="s4">400</span><span class="s2">).</span><span class="s1">json</span><span class="s2">({ </span><span class="s1">error</span><span class="s2">: </span><span class="s3">&quot;กรุณากรอกรหัสนักศึกษาและชื่อ&quot; </span><span class="s2">});</span>
+    <span class="s2">}</span>
+
+    <span class="s0">try </span><span class="s2">{</span>
+        <span class="s0">const </span><span class="s2">[</span><span class="s1">result</span><span class="s2">] = </span><span class="s0">await </span><span class="s1">pool</span><span class="s2">.</span><span class="s1">query</span><span class="s2">(</span>
+            <span class="s3">&quot;UPDATE students SET student_code = ?, full_name = ?, major = ? WHERE id = ?&quot;</span><span class="s2">,</span>
+            <span class="s2">[</span><span class="s1">student_code</span><span class="s2">.</span><span class="s1">trim</span><span class="s2">(), </span><span class="s1">full_name</span><span class="s2">.</span><span class="s1">trim</span><span class="s2">(), (</span><span class="s1">major </span><span class="s2">|| </span><span class="s3">&quot;&quot;</span><span class="s2">).</span><span class="s1">trim</span><span class="s2">(), </span><span class="s1">req</span><span class="s2">.</span><span class="s1">params</span><span class="s2">.</span><span class="s1">id</span><span class="s2">]</span>
+        <span class="s2">);</span>
+        <span class="s0">if </span><span class="s2">(</span><span class="s1">result</span><span class="s2">.</span><span class="s1">affectedRows </span><span class="s2">=== </span><span class="s4">0</span><span class="s2">) {</span>
+            <span class="s0">return </span><span class="s1">res</span><span class="s2">.</span><span class="s1">status</span><span class="s2">(</span><span class="s4">404</span><span class="s2">).</span><span class="s1">json</span><span class="s2">({ </span><span class="s1">error</span><span class="s2">: </span><span class="s3">&quot;ไม่พบนักศึกษา&quot; </span><span class="s2">});</span>
+        <span class="s2">}</span>
+        <span class="s1">res</span><span class="s2">.</span><span class="s1">json</span><span class="s2">({ </span><span class="s1">message</span><span class="s2">: </span><span class="s3">&quot;แก้ไขข้อมูลสำเร็จ&quot; </span><span class="s2">});</span>
+    <span class="s2">} </span><span class="s0">catch </span><span class="s2">(</span><span class="s1">error</span><span class="s2">) {</span>
+        <span class="s0">if </span><span class="s2">(</span><span class="s1">error</span><span class="s2">.</span><span class="s1">code </span><span class="s2">=== </span><span class="s3">&quot;ER_DUP_ENTRY&quot;</span><span class="s2">) {</span>
+            <span class="s0">return </span><span class="s1">res</span><span class="s2">.</span><span class="s1">status</span><span class="s2">(</span><span class="s4">409</span><span class="s2">).</span><span class="s1">json</span><span class="s2">({ </span><span class="s1">error</span><span class="s2">: </span><span class="s3">&quot;รหัสนักศึกษานี้มีอยู่แล้ว&quot; </span><span class="s2">});</span>
+        <span class="s2">}</span>
+        <span class="s1">console</span><span class="s2">.</span><span class="s1">error</span><span class="s2">(</span><span class="s1">error</span><span class="s2">.</span><span class="s1">message</span><span class="s2">);</span>
+        <span class="s1">res</span><span class="s2">.</span><span class="s1">status</span><span class="s2">(</span><span class="s4">500</span><span class="s2">).</span><span class="s1">json</span><span class="s2">({ </span><span class="s1">error</span><span class="s2">: </span><span class="s3">&quot;แก้ไขข้อมูลไม่สำเร็จ&quot; </span><span class="s2">});</span>
+    <span class="s2">}</span>
+<span class="s2">});</span>
+
+<span class="s1">app</span><span class="s2">.</span><span class="s1">delete</span><span class="s2">(</span><span class="s3">&quot;/api/students/:id&quot;</span><span class="s2">, </span><span class="s1">async </span><span class="s2">(</span><span class="s1">req</span><span class="s2">, </span><span class="s1">res</span><span class="s2">) =&gt; {</span>
+    <span class="s0">try </span><span class="s2">{</span>
+        <span class="s0">const </span><span class="s2">[</span><span class="s1">result</span><span class="s2">] = </span><span class="s0">await </span><span class="s1">pool</span><span class="s2">.</span><span class="s1">query</span><span class="s2">(</span>
+            <span class="s3">&quot;DELETE FROM students WHERE id = ?&quot;</span><span class="s2">,</span>
+            <span class="s2">[</span><span class="s1">req</span><span class="s2">.</span><span class="s1">params</span><span class="s2">.</span><span class="s1">id</span><span class="s2">]</span>
+        <span class="s2">);</span>
+        <span class="s0">if </span><span class="s2">(</span><span class="s1">result</span><span class="s2">.</span><span class="s1">affectedRows </span><span class="s2">=== </span><span class="s4">0</span><span class="s2">) {</span>
+            <span class="s0">return </span><span class="s1">res</span><span class="s2">.</span><span class="s1">status</span><span class="s2">(</span><span class="s4">404</span><span class="s2">).</span><span class="s1">json</span><span class="s2">({ </span><span class="s1">error</span><span class="s2">: </span><span class="s3">&quot;ไม่พบนักศึกษา&quot; </span><span class="s2">});</span>
+        <span class="s2">}</span>
+        <span class="s1">res</span><span class="s2">.</span><span class="s1">json</span><span class="s2">({ </span><span class="s1">message</span><span class="s2">: </span><span class="s3">&quot;ลบนักศึกษาสำเร็จ&quot; </span><span class="s2">});</span>
+    <span class="s2">} </span><span class="s0">catch </span><span class="s2">(</span><span class="s1">error</span><span class="s2">) {</span>
+        <span class="s1">console</span><span class="s2">.</span><span class="s1">error</span><span class="s2">(</span><span class="s1">error</span><span class="s2">.</span><span class="s1">message</span><span class="s2">);</span>
+        <span class="s1">res</span><span class="s2">.</span><span class="s1">status</span><span class="s2">(</span><span class="s4">500</span><span class="s2">).</span><span class="s1">json</span><span class="s2">({ </span><span class="s1">error</span><span class="s2">: </span><span class="s3">&quot;ลบข้อมูลไม่สำเร็จ&quot; </span><span class="s2">});</span>
+    <span class="s2">}</span>
+<span class="s2">});</span>
+
+
+<span class="s1">app</span><span class="s2">.</span><span class="s1">listen</span><span class="s2">(</span><span class="s1">PORT</span><span class="s2">, () =&gt; {</span>
+    <span class="s1">console</span><span class="s2">.</span><span class="s1">log</span><span class="s2">(</span><span class="s3">`Server running at http://localhost:</span><span class="s1">$</span><span class="s2">{</span><span class="s1">PORT</span><span class="s2">}</span><span class="s3">`</span><span class="s2">);</span>
+<span class="s2">});</span></pre>
+</body>
+</html>

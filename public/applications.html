@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>การสมัครฝึกงาน | Internship Tracking</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+    <div class="brand">Internship Tracking</div>
+    <div class="user-area">
+        <a href="index.html" class="nav-link">หน้าหลัก</a>
+        <a href="companies.html" class="nav-link">สถานประกอบการ</a>
+        <span id="userName" class="user-name"></span>
+        <form method="POST" action="/logout">
+            <button type="submit" class="logout-btn">ออกจากระบบ</button>
+        </form>
+    </div>
+</header>
+
+<main class="container">
+    <h1>การสมัครฝึกงาน</h1>
+
+    <section class="panel" id="applyPanel">
+        <h2>สมัครฝึกงาน</h2>
+        <form id="applyForm" class="student-form">
+            <select id="companySelect" required>
+                <option value="">เลือกสถานประกอบการ</option>
+            </select>
+            <input type="text" id="noteInput" placeholder="หมายเหตุ (ไม่บังคับ)">
+            <button type="submit">ส่งใบสมัคร</button>
+        </form>
+        <p id="formMessage" class="form-message"></p>
+    </section>
+
+    <section class="panel">
+        <h2>รายการใบสมัคร</h2>
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th>นักศึกษา</th>
+                <th>สถานประกอบการ</th>
+                <th>หมายเหตุ</th>
+                <th>วันที่สมัคร</th>
+                <th>สถานะ</th>
+            </tr>
+            </thead>
+            <tbody id="applicationTableBody">
+            <tr><td colspan="5">กำลังโหลด...</td></tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+
+<script src="applications.js"></script>
+</body>
+</html>
+
+
