@@ -348,6 +348,93 @@ app.put("/api/applications/:id/status", requireRole("mentor"), async (req, res) 
     }
 });
 
+app.get("/api/reports", async (req, res) => {
+    const user = req.session.user;
+
+    try {
+        let sql = `
+            SELECT r.id, r.week_number, r.content, r.mentor_comment, r.created_at,
+                   s.full_name AS student_name, s.student_code,
+                   c.name AS company_name
+            FROM progress_reports r
+            JOIN students s ON r.student_id = s.id
+            JOIN applications a ON r.application_id = a.id
+            JOIN companies c ON a.company_id = c.id
+        `;
+        const params = [];
+
+        if (user.role !== "mentor") {
+            sql += " WHERE r.student_id = ?";
+            params.push(user.student_id);
+        }
+
+        sql += " ORDER BY r.week_number DESC, r.id DESC";
+
+        const [rows] = await pool.query(sql, params);
+        res.json(rows);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ error: "ดึงข้อมูลไม่สำเร็จ" });
+    }
+});
+
+app.post("/api/reports", requireRole("student"), async (req, res) => {
+    const studentId = req.session.user.student_id;
+    const weekNumber = parseInt(req.body.week_number, 10);
+    const content = (req.body.content || "").trim();
+
+    if (!studentId) {
+        return res.status(400).json({ error: "บัญชีนี้ยังไม่ได้เชื่อมกับนักศึกษา" });
+    }
+    if (!Number.isInteger(weekNumber) || weekNumber < 1 || weekNumber > 52) {
+        return res.status(400).json({ error: "สัปดาห์ต้องเป็นตัวเลข 1-52" });
+    }
+    if (!content) {
+        return res.status(400).json({ error: "กรุณากรอกเนื้อหารายงาน" });
+    }
+
+    try {
+        const [approved] = await pool.query(
+            "SELECT id FROM applications WHERE student_id = ? AND status = 'approved' ORDER BY id DESC LIMIT 1",
+            [studentId]
+        );
+        if (approved.length === 0) {
+            return res.status(403).json({ error: "ต้องมีใบสมัครที่ได้รับอนุมัติก่อนจึงจะส่งรายงานได้" });
+        }
+
+        await pool.query(
+            "INSERT INTO progress_reports (student_id, application_id, week_number, content) VALUES (?, ?, ?, ?)",
+            [studentId, approved[0].id, weekNumber, content]
+        );
+        res.status(201).json({ message: "ส่งรายงานสำเร็จ" });
+    } catch (error) {
+        if (error.code === "ER_DUP_ENTRY") {
+            return res.status(409).json({ error: "คุณส่งรายงานสัปดาห์นี้ไปแล้ว" });
+        }
+        console.error(error.message);
+        res.status(500).json({ error: "ส่งรายงานไม่สำเร็จ" });
+    }
+});
+
+app.put("/api/reports/:id/comment", requireRole("mentor"), async (req, res) => {
+    const comment = (req.body.comment || "").trim();
+
+    try {
+        const [result] = await pool.query(
+            "UPDATE progress_reports SET mentor_comment = ? WHERE id = ?",
+            [comment || null, req.params.id]
+        );
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "ไม่พบรายงาน" });
+        }
+        res.json({ message: "บันทึกความเห็นสำเร็จ" });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ error: "บันทึกความเห็นไม่สำเร็จ" });
+    }
+});
+
+
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });

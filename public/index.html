@@ -13,6 +13,7 @@
     <div class="user-area">
         <a href="companies.html" class="nav-link">สถานประกอบการ</a>
         <a href="applications.html" class="nav-link">การสมัครฝึกงาน</a>
+        <a href="reports.html" class="nav-link">รายงานความคืบหน้า</a>
         <span class="status">● ระบบพร้อมใช้งาน</span>
         <span id="userName" class="user-name"></span>
         <form method="POST" action="/logout">
@@ -23,7 +24,6 @@
 
 <main class="container">
     <h1>ระบบติดตามการฝึกงาน<br>และสหกิจศึกษา</h1>
-    </p>
 
     <section class="stats">
         <article class="card">
@@ -39,7 +39,8 @@
             <h2 id="databaseStatus">ยังไม่เชื่อมต่อ</h2>
         </article>
     </section>
-    <section class="panel">
+
+    <section class="panel" id="addStudentPanel">
         <h2>เพิ่มนักศึกษา</h2>
         <form id="studentForm" class="student-form">
             <input type="text" id="studentCodeInput" placeholder="รหัสนักศึกษา" required>

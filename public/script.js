@@ -16,8 +16,9 @@ async function loadUser() {
         const roleThai = currentUser.role === "student" ? "นักศึกษา" : "พี่เลี้ยง";
         userName.textContent = `${currentUser.username} (${roleThai})`;
 
-        if (currentUser.role !== "mentor") {
-            document.getElementById("addStudentPanel").style.display = "none";
+        const addPanel = document.getElementById("addStudentPanel");
+        if (currentUser.role !== "mentor" && addPanel) {
+            addPanel.style.display = "none";
         }
     } catch (error) {
         userName.textContent = "";

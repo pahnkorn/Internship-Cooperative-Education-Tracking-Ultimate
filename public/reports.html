@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายงานความคืบหน้า | Internship Tracking</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+    <div class="brand">Internship Tracking</div>
+    <div class="user-area">
+        <a href="index.html" class="nav-link">หน้าหลัก</a>
+        <a href="companies.html" class="nav-link">สถานประกอบการ</a>
+        <a href="applications.html" class="nav-link">การสมัครฝึกงาน</a>
+        <span id="userName" class="user-name"></span>
+        <form method="POST" action="/logout">
+            <button type="submit" class="logout-btn">ออกจากระบบ</button>
+        </form>
+    </div>
+</header>
+
+<main class="container">
+    <h1>รายงานความคืบหน้า</h1>
+
+    <section class="panel" id="reportPanel">
+        <h2>ส่งรายงานรายสัปดาห์</h2>
+        <form id="reportForm" class="report-form">
+            <input type="number" id="weekInput" min="1" max="52" placeholder="สัปดาห์ที่" required>
+            <textarea id="contentInput" rows="4" placeholder="สรุปงานที่ทำในสัปดาห์นี้" required></textarea>
+            <button type="submit">ส่งรายงาน</button>
+        </form>
+        <p id="formMessage" class="form-message"></p>
+    </section>
+
+    <section class="panel">
+        <h2>รายงานทั้งหมด</h2>
+        <div id="reportList">กำลังโหลด...</div>
+    </section>
+</main>
+
+<script src="reports.js"></script>
+</body>
+</html>
+
